@@ -30,33 +30,48 @@ Rules:
 EOD NOTES:
 ${notes}`;
 
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${apiKey}`;
+  const models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'];
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 1500,
-        },
-      }),
-    });
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    if (!response.ok) {
-      const err = await response.text();
-      return res.status(502).json({ error: `Gemini API error: ${err}` });
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 8192,
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
+
+      // If 503 or 429, try next model
+      if (response.status === 503 || response.status === 429) {
+        continue;
+      }
+
+      if (!response.ok) {
+        const err = await response.text();
+        return res.status(502).json({ error: `Gemini API error: ${err}` });
+      }
+
+      const data = await response.json();
+      const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleaned = raw.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      return res.status(200).json(parsed);
+    } catch (e) {
+      // If last model also failed, return error
+      if (model === models[models.length - 1]) {
+        return res.status(500).json({ error: e.message });
+      }
     }
-
-    const data = await response.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const cleaned = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
-
-    return res.status(200).json(parsed);
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
   }
+
+  return res.status(503).json({ error: 'All Gemini models are currently unavailable. Please try again in a moment.' });
 }
