@@ -31,7 +31,7 @@ EOD NOTES:
 ${notes}`;
 
   try {
-    const url = \`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\${apiKey}\`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -40,20 +40,19 @@ ${notes}`;
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 8192,
-          responseMimeType: 'application/json',
+          maxOutputTokens: 1500,
         },
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      return res.status(502).json({ error: \`Gemini API error: \${err}\` });
+      return res.status(502).json({ error: `Gemini API error: ${err}` });
     }
 
     const data = await response.json();
     const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const cleaned = raw.replace(/\`\`\`json|\`\`\`/g, '').trim();
+    const cleaned = raw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
 
     return res.status(200).json(parsed);
