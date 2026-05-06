@@ -378,9 +378,44 @@
 
   // ── Exports ──
   async function captureReport() {
-    return await html2canvas(document.getElementById('reportWrap'), {
-      scale: 2, backgroundColor: '#f9f9f8', useCORS: true, logging: false,
+    const el = document.getElementById('reportWrap');
+    const root = document.documentElement;
+
+    // Force solid colors for clean export
+    root.style.setProperty('--bg', '#ffffff');
+    root.style.setProperty('--surface', '#ffffff');
+    root.style.setProperty('--surface-2', '#f3f4f6');
+    root.style.setProperty('--border', '#d1d5db');
+    root.style.setProperty('--border-light', '#e5e7eb');
+    root.style.setProperty('--text', '#111827');
+    root.style.setProperty('--text-2', '#374151');
+    root.style.setProperty('--text-3', '#6b7280');
+    root.style.setProperty('--green', '#15803d');
+    root.style.setProperty('--green-bg', '#dcfce7');
+    root.style.setProperty('--red', '#b91c1c');
+    root.style.setProperty('--red-bg', '#fee2e2');
+    root.style.setProperty('--yellow', '#b45309');
+    root.style.setProperty('--yellow-bg', '#fef3c7');
+    root.style.setProperty('--blue', '#1d4ed8');
+    root.style.setProperty('--blue-bg', '#dbeafe');
+
+    await new Promise(r => setTimeout(r, 100));
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
     });
+
+    // Restore CSS variables to defaults (remove overrides)
+    ['--bg','--surface','--surface-2','--border','--border-light',
+     '--text','--text-2','--text-3','--green','--green-bg',
+     '--red','--red-bg','--yellow','--yellow-bg','--blue','--blue-bg'
+    ].forEach(v => root.style.removeProperty(v));
+
+    return canvas;
   }
 
   async function exportJPG() {
