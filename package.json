@@ -1,0 +1,7 @@
+{
+  "name": "eod-report-generator",
+  "version": "1.0.0",
+  "description": "EOD Report Generator — paste notes, get a structured daily report",
+  "private": true,
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EOD Report Generator</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f9f9f8;
+      --surface: #ffffff;
+      --surface-2: #f4f4f2;
+      --border: #e5e5e3;
+      --border-light: #efefed;
+      --text: #1a1a18;
+      --text-2: #6b6b68;
+      --text-3: #a3a3a0;
+      --accent: #1a1a18;
+      --green: #16a34a; --green-bg: #f0fdf4;
+      --red: #dc2626;   --red-bg: #fef2f2;
+      --yellow: #d97706; --yellow-bg: #fffbeb;
+      --blue: #2563eb;  --blue-bg: #eff6ff;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Layout ── */
+    .shell { max-width: 960px; margin: 0 auto; padding: 0 24px 80px; }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 0 0; margin-bottom: 32px;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo i { font-size: 20px; color: var(--text); }
+    .logo span { font-size: 16px; font-weight: 600; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .btn-history {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; font-size: 13px; font-weight: 500;
+      color: var(--text-2); background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-history:hover { background: var(--surface-2); }
+
+    /* ── Input card ── */
+    .input-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .input-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .input-card p { font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
+    textarea {
+      width: 100%; min-height: 180px; padding: 12px 14px;
+      font-size: 14px; font-family: inherit; color: var(--text);
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); resize: vertical; line-height: 1.7;
+      outline: none; transition: border-color 0.15s;
+    }
+    textarea:focus { border-color: var(--accent); background: var(--surface); }
+    textarea::placeholder { color: var(--text-3); }
+
+    .input-actions { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+    .btn-gen {
+      display: flex; align-items: center; gap: 7px;
+      padding: 10px 22px; font-size: 14px; font-weight: 600;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-sm); cursor: pointer;
+      transition: opacity 0.15s; flex-shrink: 0;
+    }
+    .btn-gen:hover { opacity: 0.85; }
+    .btn-gen:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-clear-input {
+      padding: 10px 16px; font-size: 13px; color: var(--text-2);
+      background: transparent; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); cursor: pointer;
+    }
+    .btn-clear-input:hover { background: var(--surface-2); }
+
+    .spinner-wrap { display: none; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+    .spinner-wrap.visible { display: flex; }
+    .spinner { width: 15px; height: 15px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-banner {
+      display: none; background: var(--red-bg); color: var(--red);
+      border: 1px solid #fecaca; border-radius: var(--radius-sm);
+      padding: 10px 14px; font-size: 13px; margin-top: 12px;
+    }
+    .error-banner.visible { display: block; }
+
+    /* ── Report ── */
+    .report-wrap { display: none; }
+    .report-wrap.visible { display: block; animation: up 0.35s ease; }
+    @keyframes up { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    .report-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+    }
+    .report-date { font-size: 12px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; }
+    .export-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .btn-export {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 13px; font-size: 12px; font-weight: 500; color: var(--text-2);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s;
+    }
+    .btn-export:hover { background: var(--surface-2); }
+    .btn-export i { font-size: 15px; }
+
+    .section-label {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 12px;
+    }
+    .section-label i { font-size: 15px; }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; margin-bottom: 28px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .tomorrow-section .card { background: var(--surface-2); box-shadow: none; }
+
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+    .card-name { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
+
+    .badge { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-left: 10px; }
+    .badge-done     { background: var(--green-bg);  color: var(--green); }
+    .badge-blocked  { background: var(--red-bg);    color: var(--red); }
+    .badge-progress { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-pending  { background: var(--blue-bg);   color: var(--blue); }
+
+    .card-items { list-style: none; }
+    .card-items li {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 13px; color: var(--text-2); line-height: 1.55;
+      padding: 5px 0; border-top: 1px solid var(--border-light);
+    }
+    .card-items li i { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .ic-done   { color: var(--green); }
+    .ic-block  { color: var(--red); }
+    .ic-info   { color: var(--blue); }
+    .ic-action { color: var(--yellow); }
+
+    /* ── History panel ── */
+    .history-panel {
+      display: none; position: fixed; top: 0; right: 0; bottom: 0;
+      width: 340px; background: var(--surface); border-left: 1px solid var(--border);
+      box-shadow: -4px 0 24px rgba(0,0,0,0.08); z-index: 100; flex-direction: column;
+    }
+    .history-panel.open { display: flex; }
+    .history-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px; border-bottom: 1px solid var(--border);
+    }
+    .history-header h3 { font-size: 15px; font-weight: 600; }
+    .btn-close { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 20px; line-height: 1; }
+    .history-list { flex: 1; overflow-y: auto; padding: 12px; }
+    .history-empty { padding: 32px 20px; text-align: center; color: var(--text-3); font-size: 13px; }
+    .history-item {
+      padding: 12px 14px; border-radius: var(--radius-sm); cursor: pointer;
+      border: 1px solid var(--border); margin-bottom: 8px; transition: background 0.15s;
+    }
+    .history-item:hover { background: var(--surface-2); }
+    .history-item-date { font-size: 12px; font-weight: 500; color: var(--text-3); margin-bottom: 4px; }
+    .history-item-preview { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-clear-history {
+      margin: 12px; padding: 9px; font-size: 13px; color: var(--red);
+      background: none; border: 1px solid #fecaca; border-radius: var(--radius-sm);
+      cursor: pointer; text-align: center;
+    }
+    .btn-clear-history:hover { background: var(--red-bg); }
+
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.15); z-index: 99; }
+    .overlay.open { display: block; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: #fff; padding: 9px 20px;
+      border-radius: 20px; font-size: 13px; font-weight: 500;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 200;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+
+    @media print {
+      .no-print { display: none !important; }
+      .report-wrap { display: block !important; }
+      body { background: white; }
+    }
+    @media (max-width: 600px) {
+      .shell { padding: 0 16px 60px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .history-panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="topbar no-print">
+    <div class="logo">
+      <i class="ti ti-clipboard-text"></i>
+      <span>EOD Report Generator</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-history" onclick="toggleHistory()">
+        <i class="ti ti-history"></i> History
+      </button>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card no-print">
+    <h2>Paste your EOD notes</h2>
+    <p>Free text, bullet points, any format — Claude will structure it for you.</p>
+    <textarea id="notes" placeholder="Example:&#10;- Newtown Athletic: DNS sheet sent to Jared, awaiting confirmation&#10;- YCM ticket: webhook returning keys instead of values, need zoom call&#10;&#10;Tomorrow&#10;- Finalize Growline demo account&#10;- YCM zoom followup"></textarea>
+    <div class="input-actions">
+      <button class="btn-gen" id="genBtn" onclick="generate()">
+        <i class="ti ti-sparkles"></i> Generate report
+      </button>
+      <button class="btn-clear-input" onclick="document.getElementById('notes').value=''">Clear</button>
+      <div class="spinner-wrap" id="spinner">
+        <div class="spinner"></div> Generating your report…
+      </div>
+    </div>
+    <div class="error-banner" id="errorBanner"></div>
+  </div>
+
+  <!-- Report -->
+  <div class="report-wrap" id="reportWrap">
+    <div class="report-topbar">
+      <span class="report-date" id="reportDate"></span>
+      <div class="export-row no-print">
+        <button class="btn-export" onclick="exportPDF()"><i class="ti ti-file-type-pdf"></i> PDF</button>
+        <button class="btn-export" onclick="exportJPG()"><i class="ti ti-photo-down"></i> JPG</button>
+        <button class="btn-export" onclick="exportMD()"><i class="ti ti-markdown"></i> .md</button>
+        <button class="btn-export" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
+      </div>
+    </div>
+    <div id="reportContent"></div>
+  </div>
+</div>
+
+<!-- History Panel -->
+<div class="overlay" id="overlay" onclick="toggleHistory()"></div>
+<div class="history-panel" id="historyPanel">
+  <div class="history-header">
+    <h3>Report History</h3>
+    <button class="btn-close" onclick="toggleHistory()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+  <button class="btn-clear-history" onclick="clearHistory()">Clear all history</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let lastData = null;
+
+  // ── API call ──
+  async function generate() {
+    const notes = document.getElementById('notes').value.trim();
+    if (!notes) return;
+
+    const btn = document.getElementById('genBtn');
+    const spinner = document.getElementById('spinner');
+    const errBanner = document.getElementById('errorBanner');
+
+    btn.disabled = true;
+    spinner.classList.add('visible');
+    errBanner.classList.remove('visible');
+    document.getElementById('reportWrap').classList.remove('visible');
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      lastData = data;
+
+      const dateStr = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      document.getElementById('reportDate').textContent = dateStr;
+      document.getElementById('reportContent').innerHTML = buildReport(data);
+      document.getElementById('reportWrap').classList.add('visible');
+
+      saveToHistory(notes, data, dateStr);
+      showToast('Report generated!');
+    } catch(e) {
+      errBanner.textContent = 'Error: ' + e.message;
+      errBanner.classList.add('visible');
+    }
+
+    btn.disabled = false;
+    spinner.classList.remove('visible');
+  }
+
+  // ── Render ──
+  function badge(status) {
+    const m = {
+      done: ['badge-done','Done'], blocked: ['badge-blocked','Blocked'],
+      'in progress': ['badge-progress','In progress'], testing: ['badge-progress','Testing'],
+      pending: ['badge-pending','Pending'], issue: ['badge-blocked','Issue'],
+      followup: ['badge-pending','Follow-up'],
+    };
+    const [cls, label] = m[(status||'').toLowerCase()] || ['badge-pending', status||'Pending'];
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  function iconCls(type) {
+    const m = {
+      done: 'ti-circle-check ic-done', blocker: 'ti-alert-circle ic-block',
+      issue: 'ti-alert-triangle ic-block', note: 'ti-info-circle ic-info',
+      action: 'ti-arrow-right ic-action', update: 'ti-refresh ic-info',
+    };
+    return m[(type||'note').toLowerCase()] || 'ti-point ic-info';
+  }
+
+  function buildCards(projects) {
+    return projects.map(p => `
+      <div class="card">
+        <div class="card-top">
+          <span class="card-name">${p.name}</span>${badge(p.status)}
+        </div>
+        <ul class="card-items">
+          ${(p.items||[]).map(it => `
+            <li><i class="ti ${iconCls(it.type)}"></i><span>${it.text}</span></li>
+          `).join('')}
+        </ul>
+      </div>`).join('');
+  }
+
+  function buildReport(data) {
+    let html = '';
+    if (data.today && data.today.length) {
+      html += `<div class="section-label"><i class="ti ti-sun"></i> Today's work</div>
+               <div class="cards-grid">${buildCards(data.today)}</div>`;
+    }
+    if (data.tomorrow && data.tomorrow.length) {
+      html += `<div class="tomorrow-section">
+                 <div class="section-label"><i class="ti ti-calendar-due"></i> Tomorrow's plan</div>
+                 <div class="cards-grid">${buildCards(data.tomorrow)}</div>
+               </div>`;
+    }
+    return html;
+  }
+
+  // ── Exports ──
+  async function captureReport() {
+    return await html2canvas(document.getElementById('reportWrap'), {
+      scale: 2, backgroundColor: '#f9f9f8', useCORS: true, logging: false,
+    });
+  }
+
+  async function exportJPG() {
+    showToast('Capturing…');
+    try {
+      const canvas = await captureReport();
+      const a = document.createElement('a');
+      a.download = `eod-${today()}.jpg`;
+      a.href = canvas.toDataURL('image/jpeg', 0.95);
+      a.click();
+      showToast('JPG downloaded!');
+    } catch(e) { alert('JPG failed: ' + e.message); }
+  }
+
+  async function exportPDF() {
+    showToast('Generating PDF…');
+    try {
+      const canvas = await captureReport();
+      const { jsPDF } = window.jspdf;
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdfW = 210;
+      const pdfH = (canvas.height * pdfW) / canvas.width;
+      const pdf = new jsPDF({ orientation: pdfH > pdfW ? 'p' : 'l', unit: 'mm', format: [pdfW, pdfH] });
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      pdf.save(`eod-${today()}.pdf`);
+      showToast('PDF downloaded!');
+    } catch(e) { alert('PDF failed: ' + e.message); }
+  }
+
+  function exportMD() {
+    if (!lastData) return;
+    const se = { done:'✅', blocked:'🚫', 'in progress':'🔄', testing:'🧪', pending:'📋', issue:'⚠️', followup:'🔁' };
+    const te = { done:'✅', blocker:'🚫', issue:'⚠️', note:'ℹ️', action:'➡️', update:'🔄' };
+    const dateStr = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    let md = `# EOD Report — ${dateStr}\n\n`;
+    if (lastData.today?.length) {
+      md += `## 🌤 Today's Work\n\n`;
+      lastData.today.forEach(p => {
+        md += `### ${p.name} ${se[p.status?.toLowerCase()]||''} \`${p.status}\`\n`;
+        (p.items||[]).forEach(it => { md += `- ${te[it.type?.toLowerCase()]||'-'} ${it.text}\n`; });
+        md += '\n';
+      });
+    }
+    if (lastData.tomorrow?.length) {
+      md += `## 📅 Tomorrow's Plan\n\n`;
+      lastData.tomorrow.forEach(p => {
+        md += `### ${p.name} ${se[p.status?.toLowerCase()]||''} \`${p.status}\`\n`;
+        (p.items||[]).forEach(it => { md += `- ${te[it.type?.toLowerCase()]||'-'} ${it.text}\n`; });
+        md += '\n';
+      });
+    }
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.download = `eod-${today()}.md`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    showToast('.md downloaded!');
+  }
+
+  function today() { return new Date().toISOString().slice(0,10); }
+
+  // ── History ──
+  function saveToHistory(notes, data, dateStr) {
+    const history = getHistory();
+    const preview = notes.split('\n').find(l => l.trim()) || 'EOD Notes';
+    history.unshift({ id: Date.now(), date: dateStr, preview: preview.replace(/^[-–\s]+/,''), data });
+    localStorage.setItem('eod_history', JSON.stringify(history.slice(0, 30)));
+  }
+
+  function getHistory() {
+    try { return JSON.parse(localStorage.getItem('eod_history') || '[]'); } catch { return []; }
+  }
+
+  function toggleHistory() {
+    const panel = document.getElementById('historyPanel');
+    const overlay = document.getElementById('overlay');
+    const isOpen = panel.classList.contains('open');
+    if (!isOpen) renderHistoryList();
+    panel.classList.toggle('open', !isOpen);
+    overlay.classList.toggle('open', !isOpen);
+  }
+
+  function renderHistoryList() {
+    const history = getHistory();
+    const list = document.getElementById('historyList');
+    if (!history.length) {
+      list.innerHTML = '<div class="history-empty">No reports saved yet.<br>Generate your first report!</div>';
+      return;
+    }
+    list.innerHTML = history.map(h => `
+      <div class="history-item" onclick="loadFromHistory(${h.id})">
+        <div class="history-item-date">${h.date}</div>
+        <div class="history-item-preview">${h.preview}</div>
+      </div>`).join('');
+  }
+
+  function loadFromHistory(id) {
+    const h = getHistory().find(x => x.id === id);
+    if (!h) return;
+    lastData = h.data;
+    document.getElementById('reportDate').textContent = h.date;
+    document.getElementById('reportContent').innerHTML = buildReport(h.data);
+    document.getElementById('reportWrap').classList.add('visible');
+    toggleHistory();
+    window.scrollTo({ top: document.getElementById('reportWrap').offsetTop - 20, behavior: 'smooth' });
+    showToast('Report loaded!');
+  }
+
+  function clearHistory() {
+    if (!confirm('Clear all saved reports?')) return;
+    localStorage.removeItem('eod_history');
+    renderHistoryList();
+    showToast('History cleared');
+  }
+
+  // ── Toast ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // Enter key shortcut
+  document.getElementById('notes').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) generate();
+  });
+</script>
+</body>
+</html>
