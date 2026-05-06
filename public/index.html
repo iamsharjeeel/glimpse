@@ -378,43 +378,105 @@
 
   // ── Exports ──
   async function captureReport() {
-    const el = document.getElementById('reportWrap');
-    const root = document.documentElement;
+    // Build a self-contained offscreen div with fully inlined styles
+    // so html2canvas sees real color values, not CSS variables
+    const source = document.getElementById('reportWrap');
+    const dateStr = document.getElementById('reportDate').textContent;
 
-    // Force solid colors for clean export
-    root.style.setProperty('--bg', '#ffffff');
-    root.style.setProperty('--surface', '#ffffff');
-    root.style.setProperty('--surface-2', '#f3f4f6');
-    root.style.setProperty('--border', '#d1d5db');
-    root.style.setProperty('--border-light', '#e5e7eb');
-    root.style.setProperty('--text', '#111827');
-    root.style.setProperty('--text-2', '#374151');
-    root.style.setProperty('--text-3', '#6b7280');
-    root.style.setProperty('--green', '#15803d');
-    root.style.setProperty('--green-bg', '#dcfce7');
-    root.style.setProperty('--red', '#b91c1c');
-    root.style.setProperty('--red-bg', '#fee2e2');
-    root.style.setProperty('--yellow', '#b45309');
-    root.style.setProperty('--yellow-bg', '#fef3c7');
-    root.style.setProperty('--blue', '#1d4ed8');
-    root.style.setProperty('--blue-bg', '#dbeafe');
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+      position:fixed; top:-9999px; left:-9999px; z-index:-1;
+      width:960px; padding:32px 40px 48px;
+      background:#ffffff; font-family:Inter,system-ui,sans-serif;
+      font-size:14px; color:#111827; line-height:1.5;
+    `;
 
-    await new Promise(r => setTimeout(r, 100));
+    // Badge color map
+    const badgeStyles = {
+      done:       'background:#dcfce7;color:#15803d',
+      blocked:    'background:#fee2e2;color:#b91c1c',
+      issue:      'background:#fee2e2;color:#b91c1c',
+      'in progress':'background:#fef3c7;color:#b45309',
+      testing:    'background:#fef3c7;color:#b45309',
+      pending:    'background:#dbeafe;color:#1d4ed8',
+      followup:   'background:#dbeafe;color:#1d4ed8',
+    };
 
-    const canvas = await html2canvas(el, {
+    const iconColor = {
+      'ic-done':'#15803d','ic-block':'#b91c1c',
+      'ic-info':'#1d4ed8','ic-action':'#b45309',
+    };
+
+    // Date header
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#6b7280;margin-bottom:24px;';
+    hdr.textContent = dateStr;
+    wrapper.appendChild(hdr);
+
+    // Clone each section
+    ['Today\'s work','Tomorrow\'s plan'].forEach(sectionTitle => {
+      const sections = source.querySelectorAll('.section-label');
+      sections.forEach(sec => {
+        if (!sec.textContent.toLowerCase().includes(sectionTitle.split('\'')[0].toLowerCase())) return;
+
+        const secEl = document.createElement('div');
+        secEl.style.cssText = 'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:12px;margin-top:24px;display:flex;align-items:center;gap:6px;';
+        secEl.textContent = sec.textContent.trim();
+        wrapper.appendChild(secEl);
+
+        const grid = sec.nextElementSibling;
+        if (!grid) return;
+        const gridEl = document.createElement('div');
+        gridEl.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px;';
+
+        grid.querySelectorAll('.card').forEach(card => {
+          const cardEl = document.createElement('div');
+          const isTmrw = card.closest('.tomorrow-section') !== null;
+          cardEl.style.cssText = `background:${isTmrw?'#f9fafb':'#ffffff'};border:1px solid #e5e7eb;border-radius:10px;padding:16px 18px;`;
+
+          const nameEl = card.querySelector('.card-name');
+          const badgeEl = card.querySelector('.badge');
+          const badgeKey = (badgeEl?.textContent||'').toLowerCase().replace('-',' ').trim();
+          const bStyle = badgeStyles[badgeKey] || 'background:#dbeafe;color:#1d4ed8';
+
+          const topEl = document.createElement('div');
+          topEl.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;';
+          topEl.innerHTML = `
+            <span style="font-size:14px;font-weight:600;color:#111827;">${nameEl?.textContent||''}</span>
+            <span style="font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;margin-left:8px;${bStyle}">${badgeEl?.textContent||''}</span>
+          `;
+          cardEl.appendChild(topEl);
+
+          const ulEl = document.createElement('ul');
+          ulEl.style.cssText = 'list-style:none;margin:0;padding:0;';
+          card.querySelectorAll('.card-items li').forEach(li => {
+            const icon = li.querySelector('i');
+            const iconCls = [...(icon?.classList||[])].find(c => c.startsWith('ic-')) || 'ic-info';
+            const color = iconColor[iconCls] || '#1d4ed8';
+            const text = li.querySelector('span')?.textContent || '';
+            const liEl = document.createElement('li');
+            liEl.style.cssText = `font-size:13px;color:#374151;padding:5px 0;border-top:1px solid #f3f4f6;display:flex;align-items:flex-start;gap:8px;line-height:1.55;`;
+            liEl.innerHTML = `<span style="color:${color};flex-shrink:0;margin-top:1px;">●</span><span>${text}</span>`;
+            ulEl.appendChild(liEl);
+          });
+          cardEl.appendChild(ulEl);
+          gridEl.appendChild(cardEl);
+        });
+        wrapper.appendChild(gridEl);
+      });
+    });
+
+    document.body.appendChild(wrapper);
+    await new Promise(r => setTimeout(r, 120));
+
+    const canvas = await html2canvas(wrapper, {
       scale: 2,
       backgroundColor: '#ffffff',
       useCORS: true,
       logging: false,
-      allowTaint: true,
     });
 
-    // Restore CSS variables to defaults (remove overrides)
-    ['--bg','--surface','--surface-2','--border','--border-light',
-     '--text','--text-2','--text-3','--green','--green-bg',
-     '--red','--red-bg','--yellow','--yellow-bg','--blue','--blue-bg'
-    ].forEach(v => root.style.removeProperty(v));
-
+    document.body.removeChild(wrapper);
     return canvas;
   }
 
