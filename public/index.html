@@ -3,208 +3,275 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EOD Report Generator</title>
+  <title>Glimpse — Beautiful text formatting</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f9f9f8;
+      --bg: #fafafa;
       --surface: #ffffff;
-      --surface-2: #f4f4f2;
-      --border: #e5e5e3;
-      --border-light: #efefed;
-      --text: #1a1a18;
-      --text-2: #6b6b68;
-      --text-3: #a3a3a0;
-      --accent: #1a1a18;
-      --green: #16a34a; --green-bg: #f0fdf4;
-      --red: #dc2626;   --red-bg: #fef2f2;
-      --yellow: #d97706; --yellow-bg: #fffbeb;
-      --blue: #2563eb;  --blue-bg: #eff6ff;
-      --radius: 10px;
-      --radius-sm: 6px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --surface-2: #f5f5f4;
+      --surface-3: #fafaf9;
+      --border: #e7e5e4;
+      --border-light: #f5f5f4;
+      --text: #1c1917;
+      --text-2: #57534e;
+      --text-3: #a8a29e;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-soft: #eef2ff;
+      --green: #059669; --green-bg: #ecfdf5;
+      --red: #dc2626; --red-bg: #fef2f2;
+      --amber: #d97706; --amber-bg: #fffbeb;
+      --blue: #2563eb; --blue-bg: #eff6ff;
+      --purple: #7c3aed; --purple-bg: #f5f3ff;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.03);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.03);
     }
 
     body {
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
-    /* ── Layout ── */
-    .shell { max-width: 960px; margin: 0 auto; padding: 0 24px 80px; }
+    .shell { max-width: 980px; margin: 0 auto; padding: 0 24px 100px; }
 
+    /* ── Topbar ── */
     .topbar {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 0 0; margin-bottom: 32px;
+      padding: 24px 0 0; margin-bottom: 40px;
     }
-    .logo { display: flex; align-items: center; gap: 8px; }
-    .logo i { font-size: 20px; color: var(--text); }
-    .logo span { font-size: 16px; font-weight: 600; color: var(--text); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark i { font-size: 17px; color: #fff; }
+    .logo-text { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .logo-tag {
+      font-size: 11px; font-weight: 500; color: var(--text-3);
+      margin-left: 4px; padding: 2px 8px; background: var(--surface-2);
+      border-radius: 20px;
+    }
     .topbar-right { display: flex; align-items: center; gap: 8px; }
-    .btn-history {
-      display: flex; align-items: center; gap: 6px;
-      padding: 7px 14px; font-size: 13px; font-weight: 500;
-      color: var(--text-2); background: var(--surface);
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      cursor: pointer; transition: background 0.15s;
+    .btn-icon {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-2); cursor: pointer; transition: all 0.15s;
+      font-size: 18px;
     }
-    .btn-history:hover { background: var(--surface-2); }
+    .btn-icon:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ── Hero area ── */
+    .hero {
+      text-align: center; margin-bottom: 32px;
+    }
+    .hero h1 {
+      font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--text) 0%, var(--text-2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 8px;
+    }
+    .hero p { font-size: 15px; color: var(--text-2); max-width: 460px; margin: 0 auto; }
 
     /* ── Input card ── */
     .input-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
-      box-shadow: var(--shadow);
+      border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px;
+      box-shadow: var(--shadow-md); transition: box-shadow 0.2s;
     }
-    .input-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .input-card p { font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
+    .input-card:focus-within { box-shadow: var(--shadow-lg); }
+
     textarea {
-      width: 100%; min-height: 180px; padding: 12px 14px;
+      width: 100%; min-height: 200px; padding: 16px 18px;
       font-size: 14px; font-family: inherit; color: var(--text);
-      background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); resize: vertical; line-height: 1.7;
-      outline: none; transition: border-color 0.15s;
+      background: var(--surface-3); border: 1px solid var(--border);
+      border-radius: var(--radius); resize: vertical; line-height: 1.8;
+      outline: none; transition: all 0.2s;
     }
-    textarea:focus { border-color: var(--accent); background: var(--surface); }
+    textarea:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
     textarea::placeholder { color: var(--text-3); }
 
-    .input-actions { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+    .input-actions { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
     .btn-gen {
-      display: flex; align-items: center; gap: 7px;
-      padding: 10px 22px; font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 24px; font-size: 14px; font-weight: 600;
       background: var(--accent); color: #fff;
       border: none; border-radius: var(--radius-sm); cursor: pointer;
-      transition: opacity 0.15s; flex-shrink: 0;
+      transition: all 0.2s; flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(99,102,241,0.3);
     }
-    .btn-gen:hover { opacity: 0.85; }
-    .btn-gen:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-clear-input {
-      padding: 10px 16px; font-size: 13px; color: var(--text-2);
+    .btn-gen:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+    .btn-gen:active { transform: translateY(0); }
+    .btn-gen:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-secondary {
+      padding: 11px 18px; font-size: 13px; font-weight: 500; color: var(--text-2);
       background: transparent; border: 1px solid var(--border);
-      border-radius: var(--radius-sm); cursor: pointer;
+      border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s;
     }
-    .btn-clear-input:hover { background: var(--surface-2); }
+    .btn-secondary:hover { background: var(--surface-2); }
 
-    .spinner-wrap { display: none; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+    .spinner-wrap { display: none; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); margin-left: 4px; }
     .spinner-wrap.visible { display: flex; }
-    .spinner { width: 15px; height: 15px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .error-banner {
       display: none; background: var(--red-bg); color: var(--red);
       border: 1px solid #fecaca; border-radius: var(--radius-sm);
-      padding: 10px 14px; font-size: 13px; margin-top: 12px;
+      padding: 12px 16px; font-size: 13px; margin-top: 14px;
+      display: flex; align-items: center; gap: 8px;
     }
-    .error-banner.visible { display: block; }
+    .error-banner { display: none; }
+    .error-banner.visible { display: flex; }
 
     /* ── Report ── */
     .report-wrap { display: none; }
-    .report-wrap.visible { display: block; animation: up 0.35s ease; }
-    @keyframes up { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .report-wrap.visible { display: block; animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
     .report-topbar {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
     }
-    .report-date { font-size: 12px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; }
+    .report-meta { display: flex; align-items: center; gap: 12px; }
+    .report-date {
+      font-size: 12px; font-weight: 600; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .report-badge {
+      font-size: 11px; font-weight: 500; padding: 3px 10px;
+      background: var(--accent-soft); color: var(--accent);
+      border-radius: 20px;
+    }
     .export-row { display: flex; gap: 6px; flex-wrap: wrap; }
     .btn-export {
       display: flex; align-items: center; gap: 5px;
-      padding: 6px 13px; font-size: 12px; font-weight: 500; color: var(--text-2);
+      padding: 7px 14px; font-size: 12px; font-weight: 500; color: var(--text-2);
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s;
+      border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s;
     }
-    .btn-export:hover { background: var(--surface-2); }
+    .btn-export:hover { background: var(--surface-2); border-color: var(--accent); color: var(--accent); }
     .btn-export i { font-size: 15px; }
 
     .section-label {
-      display: flex; align-items: center; gap: 7px;
-      font-size: 11px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-3); margin-bottom: 14px;
     }
-    .section-label i { font-size: 15px; }
+    .section-label i { font-size: 16px; color: var(--accent); }
 
-    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 32px; }
 
     .card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 16px 18px;
-      box-shadow: var(--shadow);
+      border-radius: var(--radius); padding: 18px 20px;
+      box-shadow: var(--shadow); transition: all 0.2s;
     }
-    .tomorrow-section .card { background: var(--surface-2); box-shadow: none; }
+    .card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .secondary-section .card { background: var(--surface-3); box-shadow: none; border-color: var(--border-light); }
+    .secondary-section .card:hover { background: var(--surface); box-shadow: var(--shadow); }
 
     .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
-    .card-name { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
+    .card-name { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.4; }
 
-    .badge { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-left: 10px; }
+    .badge {
+      font-size: 10px; font-weight: 600; padding: 3px 10px;
+      border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+      margin-left: 10px; text-transform: uppercase; letter-spacing: 0.3px;
+    }
     .badge-done     { background: var(--green-bg);  color: var(--green); }
     .badge-blocked  { background: var(--red-bg);    color: var(--red); }
-    .badge-progress { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-progress { background: var(--amber-bg);  color: var(--amber); }
     .badge-pending  { background: var(--blue-bg);   color: var(--blue); }
+    .badge-highlight{ background: var(--purple-bg); color: var(--purple); }
 
     .card-items { list-style: none; }
     .card-items li {
       display: flex; align-items: flex-start; gap: 8px;
-      font-size: 13px; color: var(--text-2); line-height: 1.55;
-      padding: 5px 0; border-top: 1px solid var(--border-light);
+      font-size: 13px; color: var(--text-2); line-height: 1.6;
+      padding: 6px 0; border-top: 1px solid var(--border-light);
     }
-    .card-items li i { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .card-items li:first-child { border-top: none; }
+    .card-items li i { font-size: 15px; flex-shrink: 0; margin-top: 2px; }
     .ic-done   { color: var(--green); }
     .ic-block  { color: var(--red); }
     .ic-info   { color: var(--blue); }
-    .ic-action { color: var(--yellow); }
+    .ic-action { color: var(--amber); }
+    .ic-highlight { color: var(--purple); }
 
     /* ── History panel ── */
     .history-panel {
       display: none; position: fixed; top: 0; right: 0; bottom: 0;
-      width: 340px; background: var(--surface); border-left: 1px solid var(--border);
-      box-shadow: -4px 0 24px rgba(0,0,0,0.08); z-index: 100; flex-direction: column;
+      width: 360px; background: var(--surface); border-left: 1px solid var(--border);
+      box-shadow: -8px 0 30px rgba(0,0,0,0.08); z-index: 100; flex-direction: column;
     }
-    .history-panel.open { display: flex; }
+    .history-panel.open { display: flex; animation: slideIn 0.25s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     .history-header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 20px; border-bottom: 1px solid var(--border);
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
     }
-    .history-header h3 { font-size: 15px; font-weight: 600; }
-    .btn-close { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 20px; line-height: 1; }
-    .history-list { flex: 1; overflow-y: auto; padding: 12px; }
-    .history-empty { padding: 32px 20px; text-align: center; color: var(--text-3); font-size: 13px; }
+    .history-header h3 { font-size: 16px; font-weight: 600; }
+    .btn-close { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 20px; line-height: 1; padding: 4px; border-radius: 6px; }
+    .btn-close:hover { background: var(--surface-2); }
+    .history-list { flex: 1; overflow-y: auto; padding: 16px; }
+    .history-empty { padding: 40px 20px; text-align: center; color: var(--text-3); font-size: 13px; }
     .history-item {
-      padding: 12px 14px; border-radius: var(--radius-sm); cursor: pointer;
-      border: 1px solid var(--border); margin-bottom: 8px; transition: background 0.15s;
+      padding: 14px 16px; border-radius: var(--radius-sm); cursor: pointer;
+      border: 1px solid var(--border-light); margin-bottom: 8px; transition: all 0.15s;
     }
-    .history-item:hover { background: var(--surface-2); }
-    .history-item-date { font-size: 12px; font-weight: 500; color: var(--text-3); margin-bottom: 4px; }
+    .history-item:hover { background: var(--surface-2); border-color: var(--border); }
+    .history-item-date { font-size: 11px; font-weight: 600; color: var(--text-3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
     .history-item-preview { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .btn-clear-history {
-      margin: 12px; padding: 9px; font-size: 13px; color: var(--red);
+      margin: 16px; padding: 10px; font-size: 13px; font-weight: 500; color: var(--red);
       background: none; border: 1px solid #fecaca; border-radius: var(--radius-sm);
-      cursor: pointer; text-align: center;
+      cursor: pointer; text-align: center; transition: all 0.15s;
     }
     .btn-clear-history:hover { background: var(--red-bg); }
 
-    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.15); z-index: 99; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); backdrop-filter: blur(2px); z-index: 99; }
     .overlay.open { display: block; }
 
     /* ── Toast ── */
     .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: var(--accent); color: #fff; padding: 9px 20px;
-      border-radius: 20px; font-size: 13px; font-weight: 500;
-      opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 200;
-      white-space: nowrap;
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(10px);
+      background: var(--text); color: #fff; padding: 10px 22px;
+      border-radius: 24px; font-size: 13px; font-weight: 500;
+      opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.16,1,0.3,1); z-index: 200;
+      white-space: nowrap; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
     }
-    .toast.show { opacity: 1; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Keyboard shortcut hint ── */
+    .shortcut-hint {
+      font-size: 12px; color: var(--text-3); margin-left: auto;
+    }
+    .shortcut-hint kbd {
+      display: inline-block; padding: 2px 6px; font-size: 11px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 4px; font-family: inherit;
+    }
 
     @media print {
       .no-print { display: none !important; }
@@ -215,6 +282,9 @@
       .shell { padding: 0 16px 60px; }
       .cards-grid { grid-template-columns: 1fr; }
       .history-panel { width: 100%; }
+      .hero h1 { font-size: 22px; }
+      .shortcut-hint { display: none; }
+      .logo-tag { display: none; }
     }
   </style>
 </head>
@@ -223,29 +293,35 @@
 <div class="shell">
   <div class="topbar no-print">
     <div class="logo">
-      <i class="ti ti-clipboard-text"></i>
-      <span>EOD Report Generator</span>
+      <div class="logo-mark"><i class="ti ti-sparkles"></i></div>
+      <span class="logo-text">Glimpse</span>
+      <span class="logo-tag">beta</span>
     </div>
     <div class="topbar-right">
-      <button class="btn-history" onclick="toggleHistory()">
-        <i class="ti ti-history"></i> History
+      <button class="btn-icon" onclick="toggleHistory()" title="History">
+        <i class="ti ti-history"></i>
       </button>
     </div>
   </div>
 
+  <!-- Hero -->
+  <div class="hero no-print">
+    <h1>Turn text into beautiful cards</h1>
+    <p>Paste your notes, pointers, or any text — Glimpse structures them into a clean, visual format you can share.</p>
+  </div>
+
   <!-- Input -->
   <div class="input-card no-print">
-    <h2>Paste your EOD notes</h2>
-    <p>Free text, bullet points, any format — Claude will structure it for you.</p>
-    <textarea id="notes" placeholder="Example:&#10;- Newtown Athletic: DNS sheet sent to Jared, awaiting confirmation&#10;- YCM ticket: webhook returning keys instead of values, need zoom call&#10;&#10;Tomorrow&#10;- Finalize Growline demo account&#10;- YCM zoom followup"></textarea>
+    <textarea id="notes" placeholder="Paste your text here…&#10;&#10;Example:&#10;- Project Alpha: finished login page, fixed CSS bugs&#10;- Blocked on API integration, waiting for backend team&#10;- Tomorrow: deploy to staging, follow up with design review&#10;- Important: deadline for demo is Friday&#10;- Note: new design system approved by stakeholders"></textarea>
     <div class="input-actions">
       <button class="btn-gen" id="genBtn" onclick="generate()">
-        <i class="ti ti-sparkles"></i> Generate report
+        <i class="ti ti-sparkles"></i> Format
       </button>
-      <button class="btn-clear-input" onclick="document.getElementById('notes').value=''">Clear</button>
+      <button class="btn-secondary" onclick="document.getElementById('notes').value=''">Clear</button>
       <div class="spinner-wrap" id="spinner">
-        <div class="spinner"></div> Generating your report…
+        <div class="spinner"></div> Formatting…
       </div>
+      <span class="shortcut-hint"><kbd>⌘</kbd> + <kbd>↵</kbd></span>
     </div>
     <div class="error-banner" id="errorBanner"></div>
   </div>
@@ -253,7 +329,10 @@
   <!-- Report -->
   <div class="report-wrap" id="reportWrap">
     <div class="report-topbar">
-      <span class="report-date" id="reportDate"></span>
+      <div class="report-meta">
+        <span class="report-date" id="reportDate"></span>
+        <span class="report-badge">AI formatted</span>
+      </div>
       <div class="export-row no-print">
         <button class="btn-export" onclick="exportPDF()"><i class="ti ti-file-type-pdf"></i> PDF</button>
         <button class="btn-export" onclick="exportJPG()"><i class="ti ti-photo-down"></i> JPG</button>
@@ -269,7 +348,7 @@
 <div class="overlay" id="overlay" onclick="toggleHistory()"></div>
 <div class="history-panel" id="historyPanel">
   <div class="history-header">
-    <h3>Report History</h3>
+    <h3>History</h3>
     <button class="btn-close" onclick="toggleHistory()"><i class="ti ti-x"></i></button>
   </div>
   <div class="history-list" id="historyList"></div>
@@ -281,7 +360,6 @@
 <script>
   let lastData = null;
 
-  // ── API call ──
   async function generate() {
     const notes = document.getElementById('notes').value.trim();
     if (!notes) return;
@@ -316,9 +394,9 @@
       document.getElementById('reportWrap').classList.add('visible');
 
       saveToHistory(notes, data, dateStr);
-      showToast('Report generated!');
+      showToast('Formatted successfully!');
     } catch(e) {
-      errBanner.textContent = 'Error: ' + e.message;
+      errBanner.textContent = '⚠ ' + e.message;
       errBanner.classList.add('visible');
     }
 
@@ -326,23 +404,30 @@
     spinner.classList.remove('visible');
   }
 
-  // ── Render ──
   function badge(status) {
     const m = {
-      done: ['badge-done','Done'], blocked: ['badge-blocked','Blocked'],
-      'in progress': ['badge-progress','In progress'], testing: ['badge-progress','Testing'],
-      pending: ['badge-pending','Pending'], issue: ['badge-blocked','Issue'],
+      done: ['badge-done','Done'], completed: ['badge-done','Done'],
+      blocked: ['badge-blocked','Blocked'],
+      'in progress': ['badge-progress','In progress'], active: ['badge-progress','Active'],
+      testing: ['badge-progress','Testing'],
+      pending: ['badge-pending','Pending'],
+      issue: ['badge-blocked','Issue'],
       followup: ['badge-pending','Follow-up'],
+      highlight: ['badge-highlight','Highlight'],
+      important: ['badge-highlight','Important'],
+      note: ['badge-pending','Note'],
     };
-    const [cls, label] = m[(status||'').toLowerCase()] || ['badge-pending', status||'Pending'];
+    const [cls, label] = m[(status||'').toLowerCase()] || ['badge-pending', status||''];
     return `<span class="badge ${cls}">${label}</span>`;
   }
 
   function iconCls(type) {
     const m = {
-      done: 'ti-circle-check ic-done', blocker: 'ti-alert-circle ic-block',
-      issue: 'ti-alert-triangle ic-block', note: 'ti-info-circle ic-info',
+      done: 'ti-circle-check ic-done', completed: 'ti-circle-check ic-done',
+      blocker: 'ti-alert-circle ic-block', issue: 'ti-alert-triangle ic-block',
+      note: 'ti-info-circle ic-info', info: 'ti-info-circle ic-info',
       action: 'ti-arrow-right ic-action', update: 'ti-refresh ic-info',
+      highlight: 'ti-star ic-highlight', important: 'ti-star ic-highlight',
     };
     return m[(type||'note').toLowerCase()] || 'ti-point ic-info';
   }
@@ -364,12 +449,12 @@
   function buildReport(data) {
     let html = '';
     if (data.today && data.today.length) {
-      html += `<div class="section-label"><i class="ti ti-sun"></i> Today's work</div>
+      html += `<div class="section-label"><i class="ti ti-layout-cards"></i> Main</div>
                <div class="cards-grid">${buildCards(data.today)}</div>`;
     }
     if (data.tomorrow && data.tomorrow.length) {
-      html += `<div class="tomorrow-section">
-                 <div class="section-label"><i class="ti ti-calendar-due"></i> Tomorrow's plan</div>
+      html += `<div class="secondary-section">
+                 <div class="section-label"><i class="ti ti-arrow-right"></i> Next up</div>
                  <div class="cards-grid">${buildCards(data.tomorrow)}</div>
                </div>`;
     }
@@ -378,102 +463,92 @@
 
   // ── Exports ──
   async function captureReport() {
-    // Build a self-contained offscreen div with fully inlined styles
-    // so html2canvas sees real color values, not CSS variables
     const source = document.getElementById('reportWrap');
     const dateStr = document.getElementById('reportDate').textContent;
 
     const wrapper = document.createElement('div');
     wrapper.style.cssText = `
       position:fixed; top:-9999px; left:-9999px; z-index:-1;
-      width:960px; padding:32px 40px 48px;
+      width:960px; padding:36px 44px 52px;
       background:#ffffff; font-family:Inter,system-ui,sans-serif;
-      font-size:14px; color:#111827; line-height:1.5;
+      font-size:14px; color:#1c1917; line-height:1.6;
     `;
 
-    // Badge color map
     const badgeStyles = {
-      done:       'background:#dcfce7;color:#15803d',
-      blocked:    'background:#fee2e2;color:#b91c1c',
-      issue:      'background:#fee2e2;color:#b91c1c',
-      'in progress':'background:#fef3c7;color:#b45309',
-      testing:    'background:#fef3c7;color:#b45309',
-      pending:    'background:#dbeafe;color:#1d4ed8',
-      followup:   'background:#dbeafe;color:#1d4ed8',
+      done:       'background:#ecfdf5;color:#059669',
+      blocked:    'background:#fef2f2;color:#dc2626',
+      issue:      'background:#fef2f2;color:#dc2626',
+      'in progress':'background:#fffbeb;color:#d97706',
+      active:     'background:#fffbeb;color:#d97706',
+      testing:    'background:#fffbeb;color:#d97706',
+      pending:    'background:#eff6ff;color:#2563eb',
+      followup:   'background:#eff6ff;color:#2563eb',
+      highlight:  'background:#f5f3ff;color:#7c3aed',
+      important:  'background:#f5f3ff;color:#7c3aed',
     };
 
     const iconColor = {
-      'ic-done':'#15803d','ic-block':'#b91c1c',
-      'ic-info':'#1d4ed8','ic-action':'#b45309',
+      'ic-done':'#059669','ic-block':'#dc2626',
+      'ic-info':'#2563eb','ic-action':'#d97706','ic-highlight':'#7c3aed',
     };
 
-    // Date header
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#6b7280;margin-bottom:24px;';
+    hdr.style.cssText = 'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#a8a29e;margin-bottom:28px;';
     hdr.textContent = dateStr;
     wrapper.appendChild(hdr);
 
-    // Clone each section
-    ['Today\'s work','Tomorrow\'s plan'].forEach(sectionTitle => {
-      const sections = source.querySelectorAll('.section-label');
-      sections.forEach(sec => {
-        if (!sec.textContent.toLowerCase().includes(sectionTitle.split('\'')[0].toLowerCase())) return;
+    source.querySelectorAll('.section-label').forEach(sec => {
+      const secEl = document.createElement('div');
+      secEl.style.cssText = 'font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#a8a29e;margin-bottom:14px;margin-top:28px;display:flex;align-items:center;gap:8px;';
+      secEl.textContent = sec.textContent.trim();
+      wrapper.appendChild(secEl);
 
-        const secEl = document.createElement('div');
-        secEl.style.cssText = 'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:12px;margin-top:24px;display:flex;align-items:center;gap:6px;';
-        secEl.textContent = sec.textContent.trim();
-        wrapper.appendChild(secEl);
+      const grid = sec.nextElementSibling;
+      if (!grid) return;
+      const gridEl = document.createElement('div');
+      gridEl.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:8px;';
 
-        const grid = sec.nextElementSibling;
-        if (!grid) return;
-        const gridEl = document.createElement('div');
-        gridEl.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px;';
+      grid.querySelectorAll('.card').forEach(card => {
+        const cardEl = document.createElement('div');
+        const isSecondary = card.closest('.secondary-section') !== null;
+        cardEl.style.cssText = `background:${isSecondary?'#fafaf9':'#ffffff'};border:1px solid #e7e5e4;border-radius:12px;padding:18px 20px;`;
 
-        grid.querySelectorAll('.card').forEach(card => {
-          const cardEl = document.createElement('div');
-          const isTmrw = card.closest('.tomorrow-section') !== null;
-          cardEl.style.cssText = `background:${isTmrw?'#f9fafb':'#ffffff'};border:1px solid #e5e7eb;border-radius:10px;padding:16px 18px;`;
+        const nameEl = card.querySelector('.card-name');
+        const badgeEl = card.querySelector('.badge');
+        const badgeKey = (badgeEl?.textContent||'').toLowerCase().replace('-',' ').trim();
+        const bStyle = badgeStyles[badgeKey] || 'background:#eff6ff;color:#2563eb';
 
-          const nameEl = card.querySelector('.card-name');
-          const badgeEl = card.querySelector('.badge');
-          const badgeKey = (badgeEl?.textContent||'').toLowerCase().replace('-',' ').trim();
-          const bStyle = badgeStyles[badgeKey] || 'background:#dbeafe;color:#1d4ed8';
+        const topEl = document.createElement('div');
+        topEl.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;';
+        topEl.innerHTML = `
+          <span style="font-size:14px;font-weight:600;color:#1c1917;">${nameEl?.textContent||''}</span>
+          <span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;margin-left:8px;text-transform:uppercase;letter-spacing:0.3px;${bStyle}">${badgeEl?.textContent||''}</span>
+        `;
+        cardEl.appendChild(topEl);
 
-          const topEl = document.createElement('div');
-          topEl.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;';
-          topEl.innerHTML = `
-            <span style="font-size:14px;font-weight:600;color:#111827;">${nameEl?.textContent||''}</span>
-            <span style="font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;margin-left:8px;${bStyle}">${badgeEl?.textContent||''}</span>
-          `;
-          cardEl.appendChild(topEl);
-
-          const ulEl = document.createElement('ul');
-          ulEl.style.cssText = 'list-style:none;margin:0;padding:0;';
-          card.querySelectorAll('.card-items li').forEach(li => {
-            const icon = li.querySelector('i');
-            const iconCls = [...(icon?.classList||[])].find(c => c.startsWith('ic-')) || 'ic-info';
-            const color = iconColor[iconCls] || '#1d4ed8';
-            const text = li.querySelector('span')?.textContent || '';
-            const liEl = document.createElement('li');
-            liEl.style.cssText = `font-size:13px;color:#374151;padding:5px 0;border-top:1px solid #f3f4f6;display:flex;align-items:flex-start;gap:8px;line-height:1.55;`;
-            liEl.innerHTML = `<span style="color:${color};flex-shrink:0;margin-top:1px;">●</span><span>${text}</span>`;
-            ulEl.appendChild(liEl);
-          });
-          cardEl.appendChild(ulEl);
-          gridEl.appendChild(cardEl);
+        const ulEl = document.createElement('ul');
+        ulEl.style.cssText = 'list-style:none;margin:0;padding:0;';
+        card.querySelectorAll('.card-items li').forEach(li => {
+          const icon = li.querySelector('i');
+          const cls = [...(icon?.classList||[])].find(c => c.startsWith('ic-')) || 'ic-info';
+          const color = iconColor[cls] || '#2563eb';
+          const text = li.querySelector('span')?.textContent || '';
+          const liEl = document.createElement('li');
+          liEl.style.cssText = `font-size:13px;color:#57534e;padding:6px 0;border-top:1px solid #f5f5f4;display:flex;align-items:flex-start;gap:8px;line-height:1.6;`;
+          liEl.innerHTML = `<span style="color:${color};flex-shrink:0;margin-top:2px;">●</span><span>${text}</span>`;
+          ulEl.appendChild(liEl);
         });
-        wrapper.appendChild(gridEl);
+        cardEl.appendChild(ulEl);
+        gridEl.appendChild(cardEl);
       });
+      wrapper.appendChild(gridEl);
     });
 
     document.body.appendChild(wrapper);
-    await new Promise(r => setTimeout(r, 120));
+    await new Promise(r => setTimeout(r, 150));
 
     const canvas = await html2canvas(wrapper, {
-      scale: 2,
-      backgroundColor: '#ffffff',
-      useCORS: true,
-      logging: false,
+      scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false,
     });
 
     document.body.removeChild(wrapper);
@@ -485,11 +560,11 @@
     try {
       const canvas = await captureReport();
       const a = document.createElement('a');
-      a.download = `eod-${today()}.jpg`;
+      a.download = `glimpse-${today()}.jpg`;
       a.href = canvas.toDataURL('image/jpeg', 0.95);
       a.click();
       showToast('JPG downloaded!');
-    } catch(e) { alert('JPG failed: ' + e.message); }
+    } catch(e) { alert('Export failed: ' + e.message); }
   }
 
   async function exportPDF() {
@@ -502,19 +577,19 @@
       const pdfH = (canvas.height * pdfW) / canvas.width;
       const pdf = new jsPDF({ orientation: pdfH > pdfW ? 'p' : 'l', unit: 'mm', format: [pdfW, pdfH] });
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
-      pdf.save(`eod-${today()}.pdf`);
+      pdf.save(`glimpse-${today()}.pdf`);
       showToast('PDF downloaded!');
     } catch(e) { alert('PDF failed: ' + e.message); }
   }
 
   function exportMD() {
     if (!lastData) return;
-    const se = { done:'✅', blocked:'🚫', 'in progress':'🔄', testing:'🧪', pending:'📋', issue:'⚠️', followup:'🔁' };
-    const te = { done:'✅', blocker:'🚫', issue:'⚠️', note:'ℹ️', action:'➡️', update:'🔄' };
+    const se = { done:'✅', completed:'✅', blocked:'🚫', 'in progress':'🔄', active:'🔄', testing:'🧪', pending:'📋', issue:'⚠️', followup:'🔁', highlight:'⭐', important:'⭐' };
+    const te = { done:'✅', completed:'✅', blocker:'🚫', issue:'⚠️', note:'ℹ️', action:'➡️', update:'🔄', highlight:'⭐', important:'⭐' };
     const dateStr = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-    let md = `# EOD Report — ${dateStr}\n\n`;
+    let md = `# Glimpse — ${dateStr}\n\n`;
     if (lastData.today?.length) {
-      md += `## 🌤 Today's Work\n\n`;
+      md += `## Main\n\n`;
       lastData.today.forEach(p => {
         md += `### ${p.name} ${se[p.status?.toLowerCase()]||''} \`${p.status}\`\n`;
         (p.items||[]).forEach(it => { md += `- ${te[it.type?.toLowerCase()]||'-'} ${it.text}\n`; });
@@ -522,7 +597,7 @@
       });
     }
     if (lastData.tomorrow?.length) {
-      md += `## 📅 Tomorrow's Plan\n\n`;
+      md += `## Next Up\n\n`;
       lastData.tomorrow.forEach(p => {
         md += `### ${p.name} ${se[p.status?.toLowerCase()]||''} \`${p.status}\`\n`;
         (p.items||[]).forEach(it => { md += `- ${te[it.type?.toLowerCase()]||'-'} ${it.text}\n`; });
@@ -531,7 +606,7 @@
     }
     const blob = new Blob([md], { type: 'text/markdown' });
     const a = document.createElement('a');
-    a.download = `eod-${today()}.md`;
+    a.download = `glimpse-${today()}.md`;
     a.href = URL.createObjectURL(blob);
     a.click();
     showToast('.md downloaded!');
@@ -542,13 +617,13 @@
   // ── History ──
   function saveToHistory(notes, data, dateStr) {
     const history = getHistory();
-    const preview = notes.split('\n').find(l => l.trim()) || 'EOD Notes';
+    const preview = notes.split('\n').find(l => l.trim()) || 'Notes';
     history.unshift({ id: Date.now(), date: dateStr, preview: preview.replace(/^[-–\s]+/,''), data });
-    localStorage.setItem('eod_history', JSON.stringify(history.slice(0, 30)));
+    localStorage.setItem('glimpse_history', JSON.stringify(history.slice(0, 30)));
   }
 
   function getHistory() {
-    try { return JSON.parse(localStorage.getItem('eod_history') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('glimpse_history') || '[]'); } catch { return []; }
   }
 
   function toggleHistory() {
@@ -564,7 +639,7 @@
     const history = getHistory();
     const list = document.getElementById('historyList');
     if (!history.length) {
-      list.innerHTML = '<div class="history-empty">No reports saved yet.<br>Generate your first report!</div>';
+      list.innerHTML = '<div class="history-empty">No formatted text yet.<br>Paste something and hit Format!</div>';
       return;
     }
     list.innerHTML = history.map(h => `
@@ -583,25 +658,23 @@
     document.getElementById('reportWrap').classList.add('visible');
     toggleHistory();
     window.scrollTo({ top: document.getElementById('reportWrap').offsetTop - 20, behavior: 'smooth' });
-    showToast('Report loaded!');
+    showToast('Loaded from history!');
   }
 
   function clearHistory() {
-    if (!confirm('Clear all saved reports?')) return;
-    localStorage.removeItem('eod_history');
+    if (!confirm('Clear all history?')) return;
+    localStorage.removeItem('glimpse_history');
     renderHistoryList();
     showToast('History cleared');
   }
 
-  // ── Toast ──
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2200);
+    setTimeout(() => t.classList.remove('show'), 2400);
   }
 
-  // Enter key shortcut
   document.getElementById('notes').addEventListener('keydown', e => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) generate();
   });

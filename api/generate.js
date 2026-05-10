@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   const { notes } = req.body;
   if (!notes || !notes.trim()) {
-    return res.status(400).json({ error: 'No notes provided' });
+    return res.status(400).json({ error: 'No text provided' });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -13,21 +13,24 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  const prompt = `You are an EOD report parser. Parse raw end-of-day notes into structured JSON.
+  const prompt = `You are a text structuring assistant. Parse raw unstructured text (notes, pointers, updates, ideas, lists, or any freeform content) into a structured JSON format for beautiful card-based display.
+
 Return ONLY a raw JSON object — no markdown, no code fences, no explanation, nothing else before or after.
 
 Output schema:
-{"today":[{"name":"string","status":"done|blocked|in progress|testing|pending|issue|followup","items":[{"type":"done|blocker|issue|note|action|update","text":"string"}]}],"tomorrow":[{"name":"string","status":"pending|followup|in progress","items":[{"type":"action|note","text":"string"}]}]}
+{"today":[{"name":"string","status":"done|blocked|in progress|active|testing|pending|issue|highlight|important|note","items":[{"type":"done|blocker|issue|note|action|update|highlight|important","text":"string"}]}],"tomorrow":[{"name":"string","status":"pending|active|in progress|highlight","items":[{"type":"action|note|highlight","text":"string"}]}]}
 
 Rules:
-- "today" = things worked on today. "tomorrow" = planned next-day work.
-- status: "blocked" if blocked, "issue" if broken/failing, "done" if complete, "testing" if ongoing testing, "in progress" for active work, "pending"/"followup" for planned.
-- item type: done=completed, blocker=blocking issue, issue=problem, action=planned task, note=observation, update=status info.
-- Keep item text under 15 words.
-- Group sub-bullets under their parent project name.
-- If no tomorrow section exists, return empty array for tomorrow.
+- "today" = main content / current items / primary section. "tomorrow" = secondary content / next steps / future items (if any exist).
+- Group related items under a meaningful project/topic name.
+- status: "done" if completed, "blocked" if stuck, "issue" if problem, "in progress"/"active" for ongoing, "testing" for being tested, "pending" for planned, "highlight"/"important" for key items.
+- item type: done=completed, blocker=blocking issue, issue=problem, action=planned task, note=observation/info, update=status change, highlight=important point.
+- Keep item text concise (under 15 words).
+- Group sub-bullets under their parent project/topic name.
+- If no secondary/future section exists in the input, return empty array for tomorrow.
+- Be smart about inferring structure from any kind of text — meeting notes, project updates, task lists, brainstorm dumps, etc.
 
-EOD NOTES:
+TEXT TO FORMAT:
 ${notes}`;
 
   const models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'];
@@ -49,7 +52,6 @@ ${notes}`;
         }),
       });
 
-      // If 503 or 429, try next model
       if (response.status === 503 || response.status === 429) {
         continue;
       }
@@ -66,12 +68,11 @@ ${notes}`;
 
       return res.status(200).json(parsed);
     } catch (e) {
-      // If last model also failed, return error
       if (model === models[models.length - 1]) {
         return res.status(500).json({ error: e.message });
       }
     }
   }
 
-  return res.status(503).json({ error: 'All Gemini models are currently unavailable. Please try again in a moment.' });
+  return res.status(503).json({ error: 'All models are currently unavailable. Please try again in a moment.' });
 }

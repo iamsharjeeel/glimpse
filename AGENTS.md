@@ -3,7 +3,7 @@
 ## Cursor Cloud specific instructions
 
 ### Project overview
-EOD Report Generator — a single-page web app that converts raw end-of-day notes into structured card-based reports using the Google Gemini API. No build step, no npm dependencies.
+Glimpse — a single-page web app that takes text pointers and displays them in beautiful card-based format using the Google Gemini API. No build step, no npm dependencies.
 
 ### Running the dev server
 `vercel dev` requires Vercel authentication. A zero-dependency dev server (`dev-server.js`) is provided for environments without Vercel auth:

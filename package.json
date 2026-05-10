@@ -1,7 +1,7 @@
 {
-  "name": "eod-report-generator",
+  "name": "glimpse",
   "version": "1.0.0",
-  "description": "EOD Report Generator — paste notes, get a structured daily report",
+  "description": "Glimpse — a tool that takes text pointers and displays them in beautiful format",
   "private": true,
   "engines": { "node": ">=18" }
 }
